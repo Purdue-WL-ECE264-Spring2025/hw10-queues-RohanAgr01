@@ -1,5 +1,4 @@
 #include "linked_list.h"
-#include "tile_game.h"
 #include <stdlib.h>
 
 struct list_node *new_node(size_t value) {
