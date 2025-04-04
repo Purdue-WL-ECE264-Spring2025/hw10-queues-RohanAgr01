@@ -3,11 +3,9 @@
 
 struct list_node *new_node(size_t value) {
     struct list_node *node = malloc(sizeof(struct list_node));
-    if (!node) {
-        return NULL; 
-    }
+    if (!node) return NULL;
     node->value = value;
-    node->next = NULL;
+    node->next = node->prev = NULL;
     return node;
 }
 
@@ -16,63 +14,54 @@ void insert_at_head(struct linked_list *list, size_t value) {
     if (!node) return;
 
     node->next = list->head;
+    if (list->head) list->head->prev = node;
     list->head = node;
+    if (!list->tail) list->tail = node;
 }
 
 void insert_at_tail(struct linked_list *list, size_t value) {
     struct list_node *node = new_node(value);
     if (!node) return;
 
-    if (!list->head) {
-        list->head = node;
-        return;
-    }
-
-    struct list_node *cur = list->head;
-    while (cur->next) {
-        cur = cur->next;
-    }
-    cur->next = node;
+    node->prev = list->tail;
+    if (list->tail) list->tail->next = node;
+    list->tail = node;
+    if (!list->head) list->head = node;
 }
 
 size_t remove_from_head(struct linked_list *list) {
-    if (!list->head) return 0; 
+    if (!list->head) return 0;
 
-    struct list_node *temp = list->head;
-    size_t value = temp->value;
-    list->head = temp->next;
-    free(temp);
+    struct list_node *node = list->head;
+    size_t value = node->value;
+    
+    list->head = node->next;
+    if (list->head) list->head->prev = NULL;
+    else list->tail = NULL;
+
+    free(node);
     return value;
 }
 
 size_t remove_from_tail(struct linked_list *list) {
-    if (!list->head) return 0; 
+    if (!list->tail) return 0;
 
-    struct list_node *cur = list->head;
-    struct list_node *prev = NULL;
+    struct list_node *node = list->tail;
+    size_t value = node->value;
 
-    while (cur->next) {
-        prev = cur;
-        cur = cur->next;
-    }
+    list->tail = node->prev;
+    if (list->tail) list->tail->next = NULL;
+    else list->head = NULL;
 
-    size_t value = cur->value;
-    free(cur);
-
-    if (prev) {
-        prev->next = NULL;
-    } else {
-        list->head = NULL; 
-    }
-
+    free(node);
     return value;
 }
 
 void free_list(struct linked_list list) {
-    struct list_node *cur = list.head;
-    while (cur) {
-        struct list_node *temp = cur;
-        cur = cur->next;
-        free(temp);
+    struct list_node *current = list.head;
+    while (current) {
+        struct list_node *next = current->next;
+        free(current);
+        current = next;
     }
 }
