@@ -1,84 +1,46 @@
-#include "linked_list.h"
+#include "queue.h"
+#include "tile_game.h"
 #include <stdlib.h>
+#include <stdint.h>
+#include <stdbool.h>
 
-struct list_node *new_node(size_t value) {
-    struct list_node *node = malloc(sizeof(struct list_node));
-    if (!node) return NULL;
-    node->value = value;
-    node->next = NULL;
-    node->prev = NULL;
-    return node;
+
+void enqueue(struct queue *q, struct game_state state) {
+    size_t serialized_state = serialize(state);
+    insert_at_tail(&q->list, serialized_state);
 }
 
-void insert_at_head(struct linked_list *list, size_t value) {
-    struct list_node *node = new_node(value);
-    if (!node) return;
+struct game_state dequeue(struct queue *q) {
+    if (!q->list.head) return (struct game_state){0}; 
+    size_t serialized_state = remove_from_head(&q->list);
+    return deserialize(serialized_state);
+}
 
-    node->next = list->head;
-    if (list->head) {
-        list->head->prev = node;
-    }
-    list->head = node;
+int number_of_moves(struct game_state start) {
+    struct queue q = {0};
+    enqueue(&q, start);
     
-    if (!list->tail) {
-        list->tail = node;
-    }
-}
+    uint64_t visited[65536] = {0};  
+    visited[serialize(start) % 65536] = 1;
 
-void insert_at_tail(struct linked_list *list, size_t value) {
-    struct list_node *node = new_node(value);
-    if (!node) return;
+    while (q.list.head) {
+        struct game_state current = dequeue(&q);
+        if (is_goal_state(current)) return current.num_steps;
 
-    node->prev = list->tail;
-    if (list->tail) {
-        list->tail->next = node;
-    }
-    list->tail = node;
+        struct game_state next_moves[4] = {current, current, current, current};
+        move_up(&next_moves[0]);
+        move_down(&next_moves[1]);
+        move_left(&next_moves[2]);
+        move_right(&next_moves[3]);
 
-    if (!list->head) {
-        list->head = node;
-    }
-}
-
-size_t remove_from_head(struct linked_list *list) {
-    if (!list->head) return 0;
-
-    struct list_node *temp = list->head;
-    size_t value = temp->value;
-
-    list->head = list->head->next;
-    if (list->head) {
-        list->head->prev = NULL;
-    } else {
-        list->tail = NULL;
+        for (int i = 0; i < 4; i++) {
+            uint64_t next_state = serialize(next_moves[i]);
+            if (!visited[next_state % 65536]) {
+                visited[next_state % 65536] = 1;
+                enqueue(&q, next_moves[i]);
+            }
+        }
     }
 
-    free(temp);
-    return value;
-}
-
-size_t remove_from_tail(struct linked_list *list) {
-    if (!list->tail) return 0;
-
-    struct list_node *temp = list->tail;
-    size_t value = temp->value;
-
-    list->tail = list->tail->prev;
-    if (list->tail) {
-        list->tail->next = NULL;
-    } else {
-        list->head = NULL;
-    }
-
-    free(temp);
-    return value;
-}
-
-void free_list(struct linked_list list) {
-    struct list_node *current = list.head;
-    while (current) {
-        struct list_node *next = current->next;
-        free(current);
-        current = next;
-    }
+    return -1; 
 }
