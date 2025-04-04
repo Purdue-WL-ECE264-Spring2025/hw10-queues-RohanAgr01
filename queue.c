@@ -6,37 +6,40 @@ static int pool_index = 0;
 
 
 void enqueue(struct queue *q, struct game_state state) {
-    if (pool_index >= 1000) return; 
+    if (pool_index >= 1000) return;
 
     struct list_node *node = &nodes_pool[pool_index++];
     node->value = serialize(state);
     node->next = NULL;
 
-    if (!q->list.head) {
-        q->list.head = node;
+    if (!q->head) {
+        q->head = node;
+        q->tail = node;
     } else {
-        struct list_node *cur = q->list.head;
-        while (cur->next) {
-            cur = cur->next;
-        }
-        cur->next = node;
+        q->tail->next = node;
+        q->tail = node;
     }
 }
 
+
 struct game_state dequeue(struct queue *q) {
-    if (!q->list.head) return (struct game_state){0}; 
+    if (!q->head) return (struct game_state){0}; 
 
-    struct list_node *temp = q->list.head;
-    q->list.head = temp->next;
+    struct list_node *temp = q->head;
+    struct game_state state = deserialize(temp->value);
 
-    return deserialize(temp->value);
+    q->head = temp->next;
+    if (!q->head) q->tail = NULL; 
+
+    return state;
 }
 
+
 int number_of_moves(struct game_state start) {
-    struct queue q = { .list = { .head = NULL } };
+    struct queue q = { .head = NULL, .tail = NULL };
     enqueue(&q, start);
 
-    while (q.list.head) {
+    while (q.head) {
         struct game_state current = dequeue(&q);
 
         if (is_solved(current)) {
