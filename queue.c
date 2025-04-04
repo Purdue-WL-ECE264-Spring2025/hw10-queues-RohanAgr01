@@ -1,42 +1,39 @@
 #include "queue.h"
 #include "tile_game.h"
-
-static struct list_node nodes_pool[1000];
-static int pool_index = 0;
-
+#include <stdlib.h>
 
 void enqueue(struct queue *q, struct game_state state) {
-    if (pool_index >= 1000) return;
-
-    struct list_node *node = &nodes_pool[pool_index++];
-    node->value = serialize(state);
+    struct queue_node *node = malloc(sizeof(struct queue_node));
+    if (!node) return;
+    
+    node->state = state;
     node->next = NULL;
 
-    if (!q->head) {
-        q->head = node;
-        q->tail = node;
+    if (!q->tail) {
+        q->head = q->tail = node;
     } else {
         q->tail->next = node;
         q->tail = node;
     }
 }
 
-
 struct game_state dequeue(struct queue *q) {
-    if (!q->head) return (struct game_state){0}; 
+    if (!q->head) return (struct game_state){0};
 
-    struct list_node *temp = q->head;
-    struct game_state state = deserialize(temp->value);
+    struct queue_node *temp = q->head;
+    struct game_state state = temp->state;
 
-    q->head = temp->next;
-    if (!q->head) q->tail = NULL; 
+    q->head = q->head->next;
+    if (!q->head) {
+        q->tail = NULL;
+    }
 
+    free(temp);
     return state;
 }
 
-
 int number_of_moves(struct game_state start) {
-    struct queue q = { .head = NULL, .tail = NULL };
+    struct queue q = {NULL, NULL};
     enqueue(&q, start);
 
     while (q.head) {
@@ -47,12 +44,13 @@ int number_of_moves(struct game_state start) {
         }
 
         struct game_state neighbors[4];
-        int count = get_neighbors(current, neighbors);
+        int num_neighbors = get_neighbors(current, neighbors);
 
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < num_neighbors; i++) {
+            neighbors[i].num_steps = current.num_steps + 1;
             enqueue(&q, neighbors[i]);
         }
     }
 
-    return -1; 
+    return -1;
 }
