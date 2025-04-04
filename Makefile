@@ -8,11 +8,11 @@ APP = hw10
 $(APP): $(OBJS)
 	$(CC) $(CFLAGS) *.o -o $(APP)
 
+testall: hw10
+	/hw10 testcases/*.txt
 clean:
 	/bin/rm -rf *.o
 	/bin/rm -rf $(APP)
 
 %.o: %.c $(HEADERS)
 	$(CC) -c $< -o $@ $(CFLAGS)
-testall: hw10
-	/hw10 testcases/*.txt
