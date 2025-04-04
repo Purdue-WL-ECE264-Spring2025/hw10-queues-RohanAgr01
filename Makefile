@@ -1,8 +1,6 @@
 CFLAGS = -std=c99 -g -Wall -Wshadow -Wvla -Werror -Wunreachable-code
 OBJS = main.o linked_list.o tile_game.o queue.o
 HEADERS = linked_list.h tile_game.h
-testall: hw10
-/hw10 testcases/*.txt
 APP = hw10
 
 .PHONY: clean
@@ -16,3 +14,5 @@ clean:
 
 %.o: %.c $(HEADERS)
 	$(CC) -c $< -o $@ $(CFLAGS)
+testall: hw10
+	/hw10 testcases/*.txt
