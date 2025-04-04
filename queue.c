@@ -4,15 +4,14 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-
 void enqueue(struct queue *q, struct game_state state) {
     size_t serialized_state = serialize(state);
-    insert_at_tail(&q->list, serialized_state);
+    insert_at_tail(&q->data, serialized_state);
 }
 
 struct game_state dequeue(struct queue *q) {
-    if (!q->list.head) return (struct game_state){0}; 
-    size_t serialized_state = remove_from_head(&q->list);
+    if (!q->data.head) return (struct game_state){0};
+    size_t serialized_state = remove_from_head(&q->data);
     return deserialize(serialized_state);
 }
 
@@ -23,7 +22,7 @@ int number_of_moves(struct game_state start) {
     uint64_t visited[65536] = {0};  
     visited[serialize(start) % 65536] = 1;
 
-    while (q.list.head) {
+    while (q.data.head) {
         struct game_state current = dequeue(&q);
         if (is_goal_state(current)) return current.num_steps;
 
