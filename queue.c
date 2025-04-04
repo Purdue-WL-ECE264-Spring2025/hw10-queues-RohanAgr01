@@ -4,6 +4,24 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+bool is_goal_state(struct game_state state) {
+    uint8_t goal[4][4] = {
+        {1, 2, 3, 4},
+        {5, 6, 7, 8},
+        {9, 10, 11, 12},
+        {13, 14, 15, 0} 
+    };
+
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            if (state.tiles[i][j] != goal[i][j]) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 void enqueue(struct queue *q, struct game_state state) {
     size_t serialized_state = serialize(state);
     insert_at_tail(&q->data, serialized_state);
@@ -41,5 +59,5 @@ int number_of_moves(struct game_state start) {
         }
     }
 
-    return -1; 
+    return -1; // If no solution is found
 }
