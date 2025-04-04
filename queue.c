@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 
 bool is_goal_state(struct game_state state) {
     uint8_t goal[4][4] = {
@@ -36,7 +37,8 @@ struct game_state dequeue(struct queue *q) {
 int number_of_moves(struct game_state start) {
     struct queue q = {0};
     enqueue(&q, start);
-    
+
+  
     uint64_t visited[65536] = {0};  
     visited[serialize(start) % 65536] = 1;
 
@@ -54,10 +56,11 @@ int number_of_moves(struct game_state start) {
             uint64_t next_state = serialize(next_moves[i]);
             if (!visited[next_state % 65536]) {
                 visited[next_state % 65536] = 1;
+                next_moves[i].num_steps = current.num_steps + 1;
                 enqueue(&q, next_moves[i]);
             }
         }
     }
 
-    return -1; // If no solution is found
+    return -1; // No solution found
 }
