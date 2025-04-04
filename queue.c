@@ -1,56 +1,85 @@
-#include "queue.h"
+#include "linked_list.h"
 #include "tile_game.h"
 #include <stdlib.h>
 
-void enqueue(struct queue *q, struct game_state state) {
-    struct queue_node *node = malloc(sizeof(struct queue_node));
-    if (!node) return;
-    
-    node->state = state;
+struct list_node *new_node(size_t value) {
+    struct list_node *node = malloc(sizeof(struct list_node));
+    if (!node) return NULL;
+    node->value = value;
     node->next = NULL;
+    node->prev = NULL;
+    return node;
+}
 
-    if (!q->tail) {
-        q->head = q->tail = node;
-    } else {
-        q->tail->next = node;
-        q->tail = node;
+void insert_at_head(struct linked_list *list, size_t value) {
+    struct list_node *node = new_node(value);
+    if (!node) return;
+
+    node->next = list->head;
+    if (list->head) {
+        list->head->prev = node;
+    }
+    list->head = node;
+    
+    if (!list->tail) {
+        list->tail = node;
     }
 }
 
-struct game_state dequeue(struct queue *q) {
-    if (!q->head) return (struct game_state){0};
+void insert_at_tail(struct linked_list *list, size_t value) {
+    struct list_node *node = new_node(value);
+    if (!node) return;
 
-    struct queue_node *temp = q->head;
-    struct game_state state = temp->state;
+    node->prev = list->tail;
+    if (list->tail) {
+        list->tail->next = node;
+    }
+    list->tail = node;
 
-    q->head = q->head->next;
-    if (!q->head) {
-        q->tail = NULL;
+    if (!list->head) {
+        list->head = node;
+    }
+}
+
+size_t remove_from_head(struct linked_list *list) {
+    if (!list->head) return 0;
+
+    struct list_node *temp = list->head;
+    size_t value = temp->value;
+
+    list->head = list->head->next;
+    if (list->head) {
+        list->head->prev = NULL;
+    } else {
+        list->tail = NULL;
     }
 
     free(temp);
-    return state;
+    return value;
 }
 
-int number_of_moves(struct game_state start) {
-    struct queue q = {NULL, NULL};
-    enqueue(&q, start);
+size_t remove_from_tail(struct linked_list *list) {
+    if (!list->tail) return 0;
 
-    while (q.head) {
-        struct game_state current = dequeue(&q);
+    struct list_node *temp = list->tail;
+    size_t value = temp->value;
 
-        if (is_solved(current)) {
-            return current.num_steps;
-        }
-
-        struct game_state neighbors[4];
-        int num_neighbors = get_neighbors(current, neighbors);
-
-        for (int i = 0; i < num_neighbors; i++) {
-            neighbors[i].num_steps = current.num_steps + 1;
-            enqueue(&q, neighbors[i]);
-        }
+    list->tail = list->tail->prev;
+    if (list->tail) {
+        list->tail->next = NULL;
+    } else {
+        list->head = NULL;
     }
 
-    return -1;
+    free(temp);
+    return value;
+}
+
+void free_list(struct linked_list list) {
+    struct list_node *current = list.head;
+    while (current) {
+        struct list_node *next = current->next;
+        free(current);
+        current = next;
+    }
 }
